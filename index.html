@@ -1,1 +1,105 @@
-javascript:(function(){if(window.__kx)return;window.__kx=1;const C={t:90};let on=!0,ac=new Map(),pw=new Map(),lk=0;const PK=/^(password|pass|gamepass|game_password|secret|join_code|joincode|gamecode|game_code|pin|game_pin|access_code|code)$/i;function H(n,d=0){if(!n||d>9)return;if(Array.isArray(n)){n.forEach(x=>H(x,d+1));return}if(typeof n!=='object')return;const q=n.question??n.qText,c=n.correctAnswers??n.correct??n.answers_correct;if(typeof q==='string'&&Array.isArray(c)&&c.length)ac.set(q.trim().toLowerCase(),c.map(String));for(const k in n){const v=n[k];if(PK.test(k)&&(typeof v==='string'||typeof v==='number')&&String(v).length){pw.set(k,String(v));R()}}for(const k in n){try{H(n[k],d+1)}catch(e){}}}const _f=window.fetch;window.fetch=async function(...a){const r=await _f.apply(this,a);try{H(await r.clone().json())}catch(e){}return r};const _o=XMLHttpRequest.prototype.open;XMLHttpRequest.prototype.open=function(m,u,...r){this.addEventListener('load',()=>{try{H(JSON.parse(this.responseText))}catch(e){}if(typeof u==='string'){const mm=u.match(/\/play\/([a-z0-9]+)/i)||u.match(/[?&]pin=(\w+)/i);if(mm){pw.set('join_pin',mm[1]);R()}}});return _o.call(this,m,u,...r)};function FS(){const root=document.querySelector('#app')||document.body;const key=Object.keys(root).find(k=>k.startsWith('__reactFiber'));if(!key)return;const s=new Set(),st=[root[key]];while(st.length){const n=st.pop();if(!n||s.has(n))continue;s.add(n);const p=n.memoizedProps;if(p&&typeof p==='object')H(p,6);if(n.child)st.push(n.child);if(n.sibling)st.push(n.sibling)}}function VQ(){const els=document.querySelectorAll('h1,h2,h3,div,span,p');for(const e of els){const t=(e.innerText||'').trim().toLowerCase();if(t&&t.length>3&&t.length<400&&ac.has(t))return t}return null}function CL(a){if(Date.now()-lk<C.t)return;const b=document.querySelectorAll('button,[role="button"],[class*="answer"],[class*="Answer"]');for(const x of b){const t=(x.innerText||'').trim().toLowerCase();if(t&&a.some(y=>y.toLowerCase()===t)){lk=Date.now();x.click();return}}}function T(){if(on){FS();const q=VQ();if(q)CL(ac.get(q))}setTimeout(T,C.t)}let host,pan;function R(){if(!host||!pan)return;const rows=[...pw.entries()].map(([k,v])=>`<div class="row"><span class="k">${k}</span><span class="v">${v}</span></div>`).join('');pan.innerHTML=`<div class="hdr"><b>kx omnibus</b><span class="dot ${on?'on':'off'}"></span></div><div class="sec">cheat: <b>${on?'ON':'OFF'}</b> · cached: <b>${ac.size}</b></div><div class="sec">captured:</div><div class="pws">${rows||'<div class="empty">none yet…</div>'}</div>`}function BP(){host=document.createElement('div');host.style.cssText='position:fixed;top:12px;right:12px;z-index:2147483647;';const sh=host.attachShadow({mode:'open'});sh.innerHTML=`<style>:host{all:initial}.panel{width:240px;font:12px/1.35 ui-monospace,monospace;color:#e6e6e6;background:#111;border:1px solid #2a2a2a;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.5);overflow:hidden}.hdr{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:#1a1a1a;cursor:move;user-select:none;border-bottom:1px solid #2a2a2a}.dot{width:8px;height:8px;border-radius:50%}.dot.on{background:#4ade80}.dot.off{background:#f87171}.sec{padding:6px 10px;border-bottom:1px solid #1e1e1e}.pws{max-height:220px;overflow:auto;padding:6px 10px}.row{display:flex;justify-content:space-between;gap:8px;padding:3px 0}.k{color:#9ca3af}.v{color:#93c5fd;font-weight:600;word-break:break-all}.empty{color:#6b7280;font-style:italic}</style><div class="panel"><div class="hdr"><b>kx omnibus</b><span class="dot on"></span></div><div class="sec">cheat: <b>ON</b> · cached: <b>0</b></div><div class="sec">captured:</div><div class="pws"><div class="empty">none yet…</div></div></div>`;pan=sh.querySelector('.panel');R();const hd=sh.querySelector('.hdr');let dg=null;hd.onmousedown=e=>{dg={x:e.clientX,y:e.clientY};e.preventDefault()};window.addEventListener('mousemove',e=>{if(!dg)return;const r=host.getBoundingClientRect();host.style.left=(r.left+e.clientX-dg.x)+'px';host.style.top=(r.top+e.clientY-dg.y)+'px';host.style.right='auto';dg={x:e.clientX,y:e.clientY}});window.addEventListener('mouseup',()=>dg=null);document.body.appendChild(host)}window.addEventListener('keydown',e=>{if(e.key==='F2'){on=!on;R()}if(e.key==='F3'&&host){host.style.display=host.style.display==='none'?'':'none'}});BP();T();console.log('[kx] omnibus ready');})()
+(function () {
+  if (window.__kx) return; window.__kx = 1;
+
+  const C = { tick: 90 };
+  let on = true, ans = new Map(), pw = new Map(), last = 0;
+  const PK = /^(password|pass|gamepass|game_password|secret|join_code|joincode|gamecode|game_code|pin|game_pin|access_code|code)$/i;
+
+  function harvest(n, d = 0) {
+    if (!n || d > 9) return;
+    if (Array.isArray(n)) { n.forEach(x => harvest(x, d + 1)); return; }
+    if (typeof n !== 'object') return;
+    const q = n.question ?? n.qText;
+    const c = n.correctAnswers ?? n.correct ?? n.answers_correct;
+    if (typeof q === 'string' && Array.isArray(c) && c.length)
+      ans.set(q.trim().toLowerCase(), c.map(String));
+    for (const k in n) {
+      const v = n[k];
+      if (PK.test(k) && (typeof v === 'string' || typeof v === 'number') && String(v).length) {
+        pw.set(k, String(v)); draw();
+      }
+    }
+    for (const k in n) { try { harvest(n[k], d + 1); } catch {} }
+  }
+
+  // hook network
+  const _f = window.fetch;
+  window.fetch = async function (...a) {
+    const r = await _f.apply(this, a);
+    try { harvest(await r.clone().json()); } catch {}
+    return r;
+  };
+  const _o = XMLHttpRequest.prototype.open;
+  XMLHttpRequest.prototype.open = function (m, u, ...r) {
+    this.addEventListener('load', () => { try { harvest(JSON.parse(this.responseText)); } catch {} });
+    return _o.call(this, m, u, ...r);
+  };
+
+  // hook react state
+  function fiber() {
+    const root = document.querySelector('#app') || document.body;
+    const key = Object.keys(root).find(k => k.startsWith('__reactFiber'));
+    if (!key) return;
+    const seen = new Set(), st = [root[key]];
+    while (st.length) {
+      const n = st.pop();
+      if (!n || seen.has(n)) continue;
+      seen.add(n);
+      if (n.memoizedProps && typeof n.memoizedProps === 'object') harvest(n.memoizedProps, 6);
+      if (n.child) st.push(n.child);
+      if (n.sibling) st.push(n.sibling);
+    }
+  }
+
+  // click the right answer
+  function qtext() {
+    for (const e of document.querySelectorAll('h1,h2,h3,div,span,p')) {
+      const t = (e.innerText || '').trim().toLowerCase();
+      if (t.length > 3 && t.length < 400 && ans.has(t)) return t;
+    }
+    return null;
+  }
+  function click_right(list) {
+    if (Date.now() - last < C.tick) return;
+    for (const b of document.querySelectorAll('button,[role="button"],[class*="answer"],[class*="Answer"]')) {
+      const t = (b.innerText || '').trim().toLowerCase();
+      if (t && list.some(a => a.toLowerCase() === t)) { last = Date.now(); b.click(); return; }
+    }
+  }
+  function loop() {
+    if (on) { fiber(); const q = qtext(); if (q) click_right(ans.get(q)); }
+    setTimeout(loop, C.tick);
+  }
+
+  // floating panel
+  let host, pan;
+  function draw() {
+    if (!pan) return;
+    const rows = [...pw.entries()].map(([k, v]) =>
+      `<div style="display:flex;justify-content:space-between;gap:8px;padding:3px 0">
+         <span style="color:#9ca3af">${k}</span>
+         <span style="color:#93c5fd;font-weight:600;word-break:break-all">${v}</span>
+       </div>`).join('');
+    pan.innerHTML = `
+      <div style="display:flex;justify-content:space-between;padding:8px 10px;background:#1a1a1a;border-bottom:1px solid #2a2a2a">
+        <b>kx</b><span style="width:8px;height:8px;border-radius:50%;background:${on ? '#4ade80' : '#f87171'}"></span>
+      </div>
+      <div style="padding:6px 10px;border-bottom:1px solid #1e1e1e">cheat: <b>${on ? 'ON' : 'OFF'}</b> · answers: <b>${ans.size}</b></div>
+      <div style="padding:6px 10px;border-bottom:1px solid #1e1e1e">passwords / pins:</div>
+      <div style="max-height:220px;overflow:auto;padding:6px 10px">${rows || '<i style="color:#6b7280">none yet…</i>'}</div>`;
+  }
+  function panel() {
+    host = document.createElement('div');
+    host.style.cssText = 'position:fixed;top:12px;right:12px;z-index:2147483647;width:240px;font:12px/1.35 ui-monospace,monospace;color:#e6e6e6;background:#111;border:1px solid #2a2a2a;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.5);overflow:hidden';
+    document.body.appendChild(host);
+    pan = host; draw();
+  }
+
+  window.addEventListener('keydown', e => {
+    if (e.key === 'F2') { on = !on; draw(); }
+    if (e.key === 'F3' && host) host.style.display = host.style.display === 'none' ? '' : 'none';
+  });
+
+  panel(); loop();
+  console.log('%c[kx] cheat ready — F2 toggle, F3 panel', 'color:#4ade80;font-weight:bold');
+})();
